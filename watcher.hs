@@ -22,9 +22,9 @@ import qualified Debug.Trace as D
 
 main :: IO ()
 main = do
-  pf <- getEnvDefault "projectfolder" "."
+  pf <- getEnvDefault "projectfolder" "work4all-festnetz-backend"
   w <- getEnvDefault "watch" (pf <> "/src")
-  e  <- getEnvDefault "exe"
+  e  <- getEnvDefault "exe" "_build/work4all-festnetz"
   cmd <- getEnvDefault "command" "cabal new-build"
   watcher cmd pf w e
 
@@ -56,7 +56,7 @@ watcher command projectFolder watch exe = do
     -- start a watching job (in the background)
     _ <- FS.watchTree
       mgr          -- manager
-      (D.traceShowId watchFolder)       -- directory to watch
+      watchFolder       -- directory to watch
       changeFilter
       (\_ -> do
         withBuildCheck isBuilding $
@@ -80,6 +80,7 @@ watcher command projectFolder watch exe = do
         (_,_,_,cabP) <- P.createProcess $ (P.shell command)
                           { P.cwd = Just projectFolder , P.delegate_ctlc = True }
         P.waitForProcess cabP
+    -- TODO: handle Exceptions for this and other system IO
     spawn = P.spawnProcess exe []
     rebuildMaybeSpawn :: Maybe P.ProcessHandle -> IO (Maybe P.ProcessHandle)
     rebuildMaybeSpawn oldServer = rebuild >>= \case
