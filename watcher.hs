@@ -22,9 +22,9 @@ import qualified Debug.Trace as D
 
 main :: IO ()
 main = do
-  pf <- getEnvDefault "projectfolder" "work4all-festnetz-backend"
+  pf <- getEnvDefault "projectfolder" "."
   w <- getEnvDefault "watch" (pf <> "/src")
-  e  <- getEnvDefault "exe" "_build/work4all-festnetz"
+  e  <- getEnvDefault "exe" "_build/<MYPROJECTNAME>"
   cmd <- getEnvDefault "command" "cabal new-build"
   watcher cmd pf w e
 
