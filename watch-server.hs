@@ -20,9 +20,9 @@ import qualified Options.Generic as O
 data Args
    = Args {
             projectdir :: Maybe FilePath O.<?> "directory that the command is executed in"
-          , watch      :: FilePath       O.<?> "file/directory to be watched"
+          , watch      :: [FilePath]     O.<?> "files/directories to be watched"
           , command    :: Text           O.<?> "command to build executable"
-          , exe        :: Text       O.<?> "command to run after rebuild" }
+          , exe        :: Text           O.<?> "command to run after rebuild" }
    deriving (Generic)
 instance O.ParseRecord Args
 
@@ -44,43 +44,54 @@ watcher :: Text
         -- ^ command to invoke for rebuild (in project folder)
         -> FilePath
         -- ^ directory the command is executed in
-        -> FilePath
-        -- ^ file/folder to watch for source code changes
+        -> [FilePath]
+        -- ^ files/folders to watch for source code changes
         -> Text
         -- ^ location of the program’s executable
         -> IO ()
-watcher command projectDir watch exe = do
+watcher command projectDir watches exe = do
   errlog "started"
   FS.withManager $ \mgr -> do
 
-    watchAbs <- makeAbsolute watch
-    serverHandle <- rebuildMaybeSpawn Nothing >>= Ref.newIORef :: IO (Ref.IORef (Maybe P.ProcessHandle))
+    serverHandle <- rebuildMaybeSpawn Nothing >>= Ref.newIORef
+                      :: IO (Ref.IORef (Maybe P.ProcessHandle))
     isBuilding <- Ref.newIORef False :: IO (Ref.IORef Bool)
 
-      -- if it’s a file use the file’s folder and filter only on the file
-    (watchFolder, changeFilter) <- isDirectory <$> getFileStatus watchAbs >>= \case
-      True  -> pure (              watchAbs, actionOnAllChanges filterTempFiles)
-      False -> pure (takeDirectory watchAbs, actionOnAllChanges $ equalFilePath watchAbs)
+    let
+      watchArgs watch = do
+        watchAbs <- makeAbsolute watch
+        -- if it’s a file use the file’s folder and filter only on the file
+        isDirectory <$> getFileStatus watchAbs >>= \case
+          True  -> pure (              watchAbs, actionOnAllChanges filterTempFiles)
+          False -> pure (takeDirectory watchAbs, actionOnAllChanges $ equalFilePath watchAbs)
 
-    -- start a watching job (in the background)
-    _ <- FS.watchTree
-      mgr          -- manager
-      watchFolder       -- directory to watch
-      changeFilter
-      (\_ -> do
-        withBuildCheck isBuilding $
-          Ref.readIORef serverHandle
-            -- when a file changes, build it the server and on success start it again
-            >>= rebuildMaybeSpawn
-            >>= Ref.writeIORef serverHandle)
+      -- start a watching job (in the background)
+      watchAndRebuild watchFolder changeFilter =
+        FS.watchTree
+          mgr          -- manager
+          watchFolder  -- directory to watch
+          changeFilter
+          (\_ -> do
+            withBuildCheck isBuilding $
+              Ref.readIORef serverHandle
+                -- when a file changes, build it the server and on success start it again
+                >>= rebuildMaybeSpawn
+                >>= Ref.writeIORef serverHandle)
 
+    -- each --watch entry is registered
+    forM_ watches $ uncurry watchAndRebuild <=< watchArgs
+
+    -- (watchFolder, changeFilter) 
     -- sleep forever (until interrupted)
     forever $ threadDelay 1000000
   where
+
+    -- run the action for all file changes
     actionOnAllChanges action = \case
       FS.Added fp _ -> action fp
       FS.Modified fp _ -> action fp
       FS.Removed fp _ -> action fp
+
     -- filter out emacs `/.#foo files
     filterTempFiles :: FilePath -> Bool
     filterTempFiles fp = not $ R.match (R.makeRegex (".*/\\.#.*$"::ByteString) :: R.Regex) fp
