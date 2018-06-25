@@ -19,12 +19,12 @@ executable watch-server
   main-is:             watch-server.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9
                      , directory
                      , unix
                      , filepath
                      , process
-                     , protolude
+                     , protolude == 0.2.*
                      , fsnotify >= 0.2
                      , regex-tdfa >= 1.0.0
                      , optparse-generic >= 1.0.0

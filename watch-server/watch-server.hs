@@ -1,7 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i runhaskell -p "haskellPackages.ghcWithPackages (h: with h; [ protolude fsnotify regex-tdfa optparse-generic ])"
 {-# LANGUAGE NoImplicitPrelude, LambdaCase, TypeOperators, DataKinds, DeriveGeneric, OverloadedStrings, RecordWildCards, ViewPatterns #-}
-import Protolude
+import Protolude hiding (hPutStrLn)
 
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
@@ -17,6 +17,7 @@ import qualified System.FSNotify as FS
 import qualified Text.Regex.TDFA as R
 import qualified Options.Generic as O
 
+
 data Args
    = Args {
             projectdir :: Maybe FilePath O.<?> "directory that the command is executed in"
@@ -26,7 +27,6 @@ data Args
           , exe        :: Text           O.<?> "command to run after rebuild" }
    deriving (Generic)
 instance O.ParseRecord Args
-
 
 main :: IO ()
 main = do
