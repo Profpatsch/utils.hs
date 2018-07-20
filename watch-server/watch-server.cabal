@@ -25,7 +25,7 @@ executable watch-server
                      , filepath
                      , process
                      , protolude == 0.2.*
-                     , fsnotify >= 0.2
+                     , fsnotify == 0.3.*
                      , regex-tdfa >= 1.0.0
                      , optparse-generic >= 1.0.0
   -- hs-source-dirs:      

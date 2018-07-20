@@ -89,10 +89,12 @@ watcher command projectDir watches exe = do
 
     -- run the action for all file changes
     actionOnAllChanges action = \case
-      FS.Added fp _ -> action fp
-      FS.Modified fp _ -> action fp
-      FS.Removed fp _ -> action fp
+      FS.Added fp _ _ -> action fp
+      FS.Modified fp _ _ -> action fp
+      FS.Removed fp _ _ -> action fp
+      FS.Unknown fp _ _ -> action fp
 
+    -- TODO: generalize
     -- filter out emacs `/.#foo files
     filterTempFiles :: FilePath -> Bool
     filterTempFiles fp = not $ R.match (R.makeRegex (".*/\\.#.*$"::ByteString) :: R.Regex) fp
