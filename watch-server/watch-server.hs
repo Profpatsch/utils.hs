@@ -20,11 +20,11 @@ import qualified Options.Generic as O
 
 data Args
    = Args {
-            projectdir :: Maybe FilePath O.<?> "directory that the command is executed in"
+            projectdir :: Maybe FilePath O.<?> "directory the rebuild command is executed in"
           -- TODO: make NonEmpty (see https://github.com/Gabriel439/Haskell-Optparse-Generic-Library/issues/28)
           , watch      :: [FilePath]     O.<?> "files/directories to be watched"
           , command    :: Text           O.<?> "command to build executable"
-          , exe        :: Text           O.<?> "command to run after rebuild" }
+          , exe        :: Text           O.<?> "potentially long-running executable to (re-)run after rebuild" }
    deriving (Generic)
 instance O.ParseRecord Args
 
@@ -44,7 +44,7 @@ main = do
 watcher :: Text
         -- ^ command to invoke for rebuild (in project folder)
         -> FilePath
-        -- ^ directory the command is executed in
+        -- ^ directory the rebuild command is executed in
         -> [FilePath]
         -- ^ files/folders to watch for source code changes
         -> Text
