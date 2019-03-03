@@ -4,9 +4,9 @@ import Data.Fix
 import Data.List (lookup)
 import Data.String
 import Nix.Expr
-import Nix.Pretty hiding (printNix)
-import Text.PrettyPrint.ANSI.Leijen (putDoc, linebreak)
-import qualified Text.PrettyPrint.ANSI.Leijen as PP
+import qualified Nix.Pretty
+import qualified Data.Text.Prettyprint.Doc as PP
+import qualified Data.Text.Prettyprint.Doc.Render.Text as PP
 
 actions :: [(Text, ([Text] -> NExpr))]
 actions =
@@ -19,12 +19,12 @@ main = do
     [] -> print errmsg
     (action:args)  -> case lookup action actions of
       Just exprGen -> printNix $ exprGen args
-      Nothing      -> putDoc $ "action " <> ppText action <> " doesn’t exist, " <> errmsg
+      Nothing      -> PP.putDoc $ "action " <> PP.pretty action <> " doesn’t exist, " <> errmsg
+  putStr ("\n" :: Text)
   where
-    ppText = PP.text . toS
-    ppList = PP.list . map ppText :: [Text] -> PP.Doc
-    printNix expr = putDoc $ prettyNix expr <> linebreak
-    errmsg = "please specify one of " <> ppList (map fst actions) <> linebreak
+    ppList = PP.list . map PP.pretty :: [Text] -> PP.Doc ann
+    printNix expr = PP.putDoc $ Nix.Pretty.prettyNix expr
+    errmsg = "please specify one of " <> ppList (map fst actions)
 
 
 fetchFromGitHub :: Text -> Text -> Text -> Text -> NExpr
