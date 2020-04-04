@@ -20,7 +20,7 @@ executable until
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.9
-                     , optparse-applicative == 0.14.*
+                     , optparse-applicative >= 0.14
                      , time >= 1.8
                      , process
   -- hs-source-dirs:      
