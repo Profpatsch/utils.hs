@@ -24,7 +24,7 @@ executable watch-server
                      , unix
                      , filepath
                      , process
-                     , protolude == 0.2.*
+                     , protolude
                      , fsnotify == 0.3.*
                      , regex-tdfa >= 1.0.0
                      , optparse-generic >= 1.0.0
